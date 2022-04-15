@@ -3,7 +3,12 @@ const cors = require("cors");
 require("./db/config");
 const User = require("./db/User");
 const Product = require("./db/Product");
+const res = require("express/lib/response");
 // const res = require("express/lib/response");
+
+const Jwt = require('jsonwebtoken');
+const jwtKey = 'e-comm';
+
 const app = express();
 
 app.use(express.json());
@@ -14,14 +19,18 @@ app.post("/register", async (req, resp) => {
   let result = await users.save();
   result = result.toObject();
   delete result.password;
-  resp.send(result);
+    Jwt.sign({result}, jwtKey,{expiresIn: "2h"}, (err, token)=>{
+        resp.send({ result ,auth : token});
+      })
 });
 
 app.post("/login", async (req, resp) => {
   if (req.body.password && req.body.email) {
     let user = await User.findOne(req.body).select("-password");
     if (user) {
-      resp.send(user);
+      Jwt.sign({user}, jwtKey,{expiresIn: "2h"}, (err, token)=>{
+        resp.send({ user ,auth : token});
+      })
     } else {
       resp.send({ result: "No User Found" });
     }
@@ -57,5 +66,15 @@ app.get("/product/:id", async (req, resp)=>{
    resp.send({result: "No Record Found"})
  }
 });
+
+app.put("product/:id", async (req, resp)=>{
+  let result = await Product.updateOne(
+    {_id: req.params.id},
+    {
+      $set: req.body
+    }
+  )
+  resp.send(result)
+})
 
 app.listen(5000);
