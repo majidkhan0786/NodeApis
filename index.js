@@ -3,7 +3,7 @@ const cors = require("cors");
 require("./db/config");
 const User = require("./db/User");
 const Product = require("./db/Product");
-const res = require("express/lib/response");
+// const res = require("express/lib/response");
 const app = express();
 
 app.use(express.json());
@@ -49,9 +49,13 @@ app.delete("/product/:id", async (req, resp)=>{
   resp.send(result);
 });
 
-app.patch("/updateData/:id", async (req, resp)=>{
-  const result = await Product.updateOne({_id:req.params.id});
-  resp.send("updating data ......");
+app.get("/product/:id", async (req, resp)=>{
+  const result = await Product.findOne({_id:req.params.id});
+ if(result){
+  resp.send(result);
+ } else{
+   resp.send({result: "No Record Found"})
+ }
 });
 
 app.listen(5000);
